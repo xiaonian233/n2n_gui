@@ -191,6 +191,8 @@ void GetIP()
 	{
 		if (strncmp(p[i].Description, "TAP-Windows Adapter V9", 22) == 0)
 		{
+			if (strcmp(p[i].IpAddr, "0.0.0.0") == 0)
+				continue;
 			//CurrentIpAddr = p[i].IpAddr;
 			strcpy_s(CurrentIpAddr,sizeof(p[i].IpAddr), p[i].IpAddr);
 			//MessageBox(NULL,CurrentIpAddr,NULL,NULL);
@@ -251,7 +253,6 @@ BEGIN_MESSAGE_MAP(Cn2n_guiDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_EDIT_SERVER, &Cn2n_guiDlg::OnBnClickedBtnEditServer)
 	//ON_BN_CLICKED(IDC_BTN_SET, &Cn2n_guiDlg::OnBnClickedBtnSet)
 	ON_BN_CLICKED(IDC_BTN_CLR_LOG, &Cn2n_guiDlg::OnBnClickedBtnClrLog)
-	ON_STN_CLICKED(IDC_IPADD, &Cn2n_guiDlg::OnStnClickedIpadd)
 END_MESSAGE_MAP()
 
 // Cn2n_guiDlg 消息处理程序
@@ -259,8 +260,6 @@ END_MESSAGE_MAP()
 BOOL Cn2n_guiDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
-	// 将“关于...”菜单项添加到系统菜单中。
 
 	
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
@@ -362,21 +361,17 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	//设置自动获取IP
 	((CButton*)GetDlgItem(IDC_AUTOGET))->SetCheck(bAutoGet);
 
-	//检测网卡
-	m_Icon_Connected=AfxGetApp()->LoadIcon(IDI_ICON1);
-	m_Icon_NoConnect=AfxGetApp()->LoadIcon(IDI_ICON2);
-	m_Icon_ConnectErr=AfxGetApp()->LoadIcon(IDI_ICON3);
 	if (!CheckTapAdapters()) 
 	{
 		SetDlgItemText(IDC_BTN_START_STOP,"安装网卡");
 		SetDlgItemText(IDC_STATIC_CONNECT_STATUS,"未安装");
 		m_ConnectStatus.SetColor(RGB(255,0,0));
-		((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_ConnectErr);
+		//((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_ConnectErr);
 	}
 	else
 	{
 		m_ConnectStatus.SetColor(RGB(155,100,75));
-		((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
+		//((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
 	}
 
 	//添加托盘
@@ -483,10 +478,10 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 				//MessageBox(NULL, CurrentIpAddr, NULL, NULL);
 				pDlg->SetWindowTextA(_T("N2N--已连接"));
 				pDlg->m_ConnectStatus.SetColor(RGB(0,200,0));
-				((CStatic*)pDlg->GetDlgItem(IDC_PIC_CONNECT))->SetIcon(pDlg->m_Icon_Connected);
+				//((CStatic*)pDlg->GetDlgItem(IDC_PIC_CONNECT))->SetIcon(pDlg->m_Icon_Connected);
 				//MessageBoxA(NULL, CurrentIpAddr, NULL, NULL);
 				pDlg->GetDlgItem(IDC_EDIT_N2NIP)->SetWindowTextA(_T(CurrentIpAddr));
-				pDlg->SetDlgItemText(IDC_IPADD, CurrentIpAddr);
+				pDlg->SetDlgItemText(IDC_IPEDIT, CurrentIpAddr);
 				strcpy_s(pDlg->m_Nid.szTip,sizeof(pDlg->m_Nid.szTip),"n2n Gui 已连接");	
 				Shell_NotifyIcon(NIM_MODIFY,&pDlg->m_Nid);				//修改托盘区图标
 			}
@@ -532,15 +527,6 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 
 void Cn2n_guiDlg::ShowSelServer(SERVER_Struct const * pServer)
 {
-	//m_List.DeleteAllItems();
-	//for (int i=0; i<pServer->RouteCnts; i++)
-	//{
-	//	SERVER_ROUTE_Struct *route=pServer->pRouteList+i;
-	//	m_List.InsertItem(i, route->Net);
-	//	if (route->Enable) m_List.SetCheck(i);
-	//	m_List.SetItemText(i,1,route->Gate);
-	//	m_List.SetItemText(i,2,route->Note);
-	//}
 	SetDlgItemText(IDC_EDIT_NETNAME,pServer->NetName);
 	SetDlgItemText(IDC_EDIT_PASSWD, pServer->NetPasswd);
 	SetDlgItemText(IDC_EDIT_N2NIP,pServer->IpAddr);
@@ -736,8 +722,10 @@ void Cn2n_guiDlg::OnTimer(UINT_PTR nIDEvent)
 		ConnectTick++;
 
 		GetDlgItemText(IDC_STATIC_CONNECT_STATUS,str,sizeof(str));
-		if (strcmp(str,"已连接")!=0)
-			((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(ConnectTick%2==0 ? m_Icon_NoConnect:NULL);
+		if (strcmp(str, "已连接") != 0)
+		{
+			//((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(ConnectTick%2==0 ? m_Icon_NoConnect:NULL);
+		}
 		else if (ConnectTick>=20)	//添加路由要延时3600ms以上，不然跃点数会有问题
 		{
 			//SetRoute(true);
@@ -752,7 +740,7 @@ void Cn2n_guiDlg::OnTimer(UINT_PTR nIDEvent)
 			SetDlgItemText(IDC_BTN_START_STOP,"启动");
 			SetDlgItemText(IDC_STATIC_CONNECT_STATUS,"未连接");
 			m_ConnectStatus.SetColor(RGB(155,100,75)); 
-			((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
+			//((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
 		}
 	}
 	CDialogEx::OnTimer(nIDEvent);
@@ -964,19 +952,10 @@ bool Cn2n_guiDlg::StartEdge()
 
 void Cn2n_guiDlg::StopN2n()
 {
-	//删除路由
-	//SetRoute(false);
-	//关闭进程
-	//if (hServerProcess != 0)
-	//{
-	//	TerminateProcess(hServerProcess, 0);
-	//	SendMessage(ON_SHOWLOG_MSG, (WPARAM)"--------------------------N2N服务端关闭--------------------------\r\n");
-	//}
 	if (hWinIPBoard != 0)
 	{
 		DWORD PID = GetProcessId(hWinIPBoard);
 		AttachConsole(PID);
-		//SetConsoleCtrlHandler(NULL, TRUE);
 		GenerateConsoleCtrlEvent(CTRL_C_EVENT, PID);
 		FreeConsole();
 		////WinIPBoard
@@ -1010,18 +989,11 @@ void Cn2n_guiDlg::StopN2n()
 		SetDlgItemText(IDC_STATIC_CONNECT_STATUS, "未连接");
 
 		m_ConnectStatus.SetColor(RGB(155, 100, 75));
-		((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
+		//((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
 		PostMessage(ON_SHOWLOG_MSG, (WPARAM)"--------------------------N2N客户端关闭--------------------------\r\n\r\n");
 		strcpy_s(m_Nid.szTip, sizeof(m_Nid.szTip), "n2n Gui 未连接");
 		Shell_NotifyIcon(NIM_MODIFY, &m_Nid);				//修改托盘区图标
 															//
 		KillTimer(1);
 	}
-}
-
-
-
-void Cn2n_guiDlg::OnStnClickedIpadd()
-{
-	// TODO: 在此添加控件通知处理程序代码
 }

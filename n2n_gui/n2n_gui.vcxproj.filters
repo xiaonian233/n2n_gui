@@ -25,15 +25,6 @@
     <None Include="res\rt_manif.bin">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="res\ActionCenterCPL_2.ico">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="res\ActionCenterCPL_3.ico">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="res\ActionCenterCPL_4.ico">
-      <Filter>资源文件</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="n2n_gui.h">
